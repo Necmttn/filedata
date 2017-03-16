@@ -1,0 +1,51 @@
+#!/usr/bin/env node
+
+var fs = require('fs')
+var program = require('commander')
+var path = require('path') 
+var mime = require('mime')
+var chalk = require('chalk')
+
+program
+	.version(require('../package').version)
+  .usage('<command> [options]')
+  .parse(process.argv)
+
+var rawName = program.args[0]
+var root = path.resolve(rawName)
+var ignore = ['.DS_Store']
+
+var fileData = []
+function getFileData(root) {
+   var list = fs.readdirSync(root)
+   list.forEach(function (file) {
+      if (ignore.indexOf(file) > -1) {
+        return
+      }
+      var pathName = path.join(root, file)
+      var stats = fs.statSync(pathName)
+      if(stats.isDirectory()) {
+        return getFileData(pathName)
+      } 
+      var mediaType = 
+      fileData.push(
+        JSON.stringify({
+          name: file,
+          size: stats.size,
+          timeCreated: new Date (stats.ctime),
+          mediaType: mime.lookup(file)
+        }))
+    })
+    // console.log(fileData)
+    fileData.map(function (file, index) {
+      if(index % 2 === 0) {
+        console.log(chalk.yellow(file))
+      } else {
+        console.log(chalk.cyan(file))
+      }
+    })
+}
+
+
+getFileData(root)
+
